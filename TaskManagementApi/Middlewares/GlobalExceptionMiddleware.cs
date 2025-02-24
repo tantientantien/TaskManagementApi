@@ -1,16 +1,16 @@
-﻿using System.Net;
+﻿using Serilog;
+using System.Net;
+using System.Text.Json;
 
 namespace TaskManagementApi.Middlewares
 {
     public class GlobalExceptionMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly ILogger<GlobalExceptionMiddleware> _logger;
 
-        public GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExceptionMiddleware> logger)
+        public GlobalExceptionMiddleware(RequestDelegate next)
         {
             _next = next;
-            _logger = logger;
         }
 
         public async Task Invoke(HttpContext context)
@@ -21,19 +21,34 @@ namespace TaskManagementApi.Middlewares
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unhandled Exception for {Path}", context.Request.Path);
+                Log.Error(ex, "Unhandled Exception at {Path}", context.Request.Path);
                 await HandleExceptionAsync(context, ex);
             }
         }
 
-        private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+        private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
             context.Response.ContentType = "application/json";
-            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
-            var response = new { message = "An unexpected error occurred." };
+            int statusCode = exception switch
+            {
+                HttpRequestException httpEx when httpEx.StatusCode.HasValue => (int)httpEx.StatusCode.Value,
+                UnauthorizedAccessException => (int)HttpStatusCode.Unauthorized,
+                KeyNotFoundException => (int)HttpStatusCode.NotFound,
+                ArgumentException => (int)HttpStatusCode.BadRequest,
+                _ => (int)HttpStatusCode.InternalServerError
+            };
 
-            return context.Response.WriteAsJsonAsync(response);
+            var response = new
+            {
+                statusCode,
+                error = exception.GetType().Name,
+                message = exception?.InnerException?.Message
+            };
+
+            context.Response.StatusCode = statusCode;
+
+            await context.Response.WriteAsync(JsonSerializer.Serialize(response, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
         }
     }
 }

@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TaskManagementApi.Models;
-using TaskManagementApi.Services;
+using System.Security.Claims;
+using TaskManagementApi.Dtos;
+using TaskManagementApi.Dtos.Task;
+using TaskManagementApi.Mappers;
+using Task = TaskManagementApi.Models.Task;
 
 namespace TaskManagementApi.Controllers
 {
@@ -9,75 +12,110 @@ namespace TaskManagementApi.Controllers
     [ApiController]
     public class TaskController : ControllerBase
     {
-        private readonly ITaskService _taskService;
+        private readonly IGenericRepository<Task> _taskRepository;
 
-        public TaskController(ITaskService taskService)
+        public TaskController(IGenericRepository<Task> taskRepository)
         {
-            _taskService = taskService;
+            _taskRepository = taskRepository;
         }
 
+        // GET: api/tasks
         [HttpGet]
-        public ActionResult<List<TaskItem>> GetAllTasks()
+        public async Task<ActionResult<IEnumerable<TaskDataDto>>> GetAllTasks()
         {
-            return Ok(_taskService.GetAllTasks());
+            var tasks = await _taskRepository.GetAll();
+            var taskDtos = tasks.Select(TaskMapper.MapToDataDto);
+
+            return Ok(new { status = "success", message = "Tasks retrieved", data = taskDtos });
         }
 
+        // GET: api/tasks/{id}
         [HttpGet("{id}")]
-        public ActionResult<TaskItem> GetTaskById(int id)
+        public async Task<ActionResult<TaskDataDto>> GetTaskById(int id)
         {
-            try
+            var task = await _taskRepository.GetById(id);
+            if (task == null)
             {
-                return Ok(_taskService.GetTaskById(id));
+                return NotFound(new { status = "error", message = "Task not found" });
             }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
+
+            var taskDto = TaskMapper.MapToDataDto(task);
+            return Ok(new { status = "success", message = "Task found", data = taskDto });
         }
 
+        // POST: api/tasks/{categoryId}
+        [Authorize]
         [HttpPost]
-        public IActionResult AddTask([FromBody] TaskItem task)
+        public async Task<ActionResult<TaskDataDto>> CreateTask([FromBody] TaskCreateDto taskDto)
         {
-            if (task == null || string.IsNullOrWhiteSpace(task.Title))
+            if (!ModelState.IsValid)
             {
-                return BadRequest(new { message = "Task title is required." });
+                return BadRequest(new { status = "error", message = "Invalid task data", errors = ModelState });
             }
 
-            _taskService.AddTask(task);
-            return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, task);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                return Unauthorized(new { status = "error", message = "Unauthorized: Missing userId" });
+            }
+
+            var task = TaskMapper.MapFromCreateDto(taskDto);
+            task.UserId = int.Parse(userIdClaim);
+
+            await _taskRepository.Add(task);
+            var taskDtoResponse = TaskMapper.MapToDataDto(task);
+
+            return CreatedAtAction(nameof(GetTaskById), new { id = task.Id },
+                new { status = "success", message = "Task created", data = taskDtoResponse });
         }
 
+        // PUT: api/tasks/{id}
+        [Authorize]
         [HttpPut("{id}")]
-        public IActionResult UpdateTask(int id, [FromBody] TaskItem task)
+        public async Task<IActionResult> UpdateTask(int id, [FromBody] TaskUpdateDto taskDto)
         {
-            if (task == null || task.Id != id)
+            if (!ModelState.IsValid)
             {
-                return BadRequest(new { message = "Task ID mismatch." });
+                return BadRequest(new { status = "error", message = "Invalid data", errors = ModelState });
             }
 
-            try
+            var existingTask = await _taskRepository.GetById(id);
+            if (existingTask == null)
             {
-                _taskService.UpdateTask(task);
-                return Ok("Updated successfully");
+                return NotFound(new { status = "error", message = "Task not found" });
             }
-            catch (KeyNotFoundException ex)
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || int.Parse(userIdClaim) != existingTask.UserId)
             {
-                return NotFound(new { message = ex.Message });
+                return Forbid();
             }
+
+            TaskMapper.MapFromUpdateDto(taskDto, existingTask);
+            await _taskRepository.Update(existingTask);
+
+            return Ok(new { status = "success", message = "Task updated" });
         }
 
+        // DELETE: api/tasks/{id}
+        [Authorize]
         [HttpDelete("{id}")]
-        public IActionResult DeleteTask(int id)
+        public async Task<IActionResult> DeleteTask(int id)
         {
-            try
+            var task = await _taskRepository.GetById(id);
+            if (task == null)
             {
-                _taskService.DeleteTask(id);
-                return Ok("Deleted successfully");
+                return NotFound(new { status = "error", message = "Task not found" });
             }
-            catch (KeyNotFoundException ex)
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || int.Parse(userIdClaim) != task.UserId)
             {
-                return NotFound(new { message = ex.Message });
+                return Forbid();
             }
+
+            await _taskRepository.Delete(id);
+            return NoContent();
         }
     }
 }
