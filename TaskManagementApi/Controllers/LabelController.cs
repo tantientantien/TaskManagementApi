@@ -47,7 +47,7 @@ namespace TaskManagementApi.Controllers
 
         // POST: api/labels
         [HttpPost]
-        public async Task<ActionResult<LabelDataDto>> CreateLabel([FromBody] LabelCreateDto createDto)
+        public async Task<ActionResult<LabelDataDto>> AddLabel([FromBody] LabelCreateDto createDto)
         {
             if (!ModelState.IsValid)
             {

@@ -35,7 +35,7 @@ namespace TaskManagementApi.Controllers
         // POST: api/categories
         [HttpPost]
         [Authorize] //[Authorize(Roles = "Admin")]
-        public async Task<ActionResult<CategoryDataDto>> CreateCategory([FromBody] CategoryCreateDto createDto)
+        public async Task<ActionResult<CategoryDataDto>> AddCategory([FromBody] CategoryCreateDto createDto)
         {
             if (!ModelState.IsValid)
             {

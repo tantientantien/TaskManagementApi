@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TaskManagementApi.Dtos.TaskLabel;
@@ -20,6 +21,7 @@ namespace TaskManagementApi.Controllers
         }
 
         // POST: api/task-labels
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<TaskLabel>> AssignLabelToATask([FromBody] TaskLabelCreateDto createDto)
         {
@@ -35,6 +37,7 @@ namespace TaskManagementApi.Controllers
         }
 
         // DELETE: api/task-labels/{taskId}/{labelId}
+        [Authorize]
         [HttpDelete("{taskId:int}/{labelId:int}")]
         public async Task<IActionResult> RemoveLabelFromATask(int taskId, int labelId)
         {
