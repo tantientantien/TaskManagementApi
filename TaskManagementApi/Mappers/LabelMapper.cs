@@ -6,7 +6,7 @@ namespace TaskManagementApi.Mappers
 {
     public static class LabelMapper
     {
-        public static Label MapFromCreateDto(LabelCreateDto dto)
+        public static Label MapFromCreateDto(this LabelCreateDto dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
             return new Label
@@ -15,7 +15,7 @@ namespace TaskManagementApi.Mappers
             };
         }
 
-        public static void MapFromUpdateDto(LabelUpdateDto dto, Label existingLabel)
+        public static void MapFromUpdateDto(this LabelUpdateDto dto, Label existingLabel)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
             if (existingLabel == null) throw new ArgumentNullException(nameof(existingLabel));
@@ -23,7 +23,7 @@ namespace TaskManagementApi.Mappers
             existingLabel.Name = dto.Name;
         }
 
-        public static LabelDataDto MapToDataDto(Label label)
+        public static LabelDataDto MapToDataDto(this Label label)
         {
             return new LabelDataDto
             {
@@ -32,7 +32,7 @@ namespace TaskManagementApi.Mappers
             };
         }
 
-        public static IEnumerable<LabelDataDto> MapToDataDtoList(IEnumerable<Label> labels)
+        public static IEnumerable<LabelDataDto> MapToDataDtoList(this IEnumerable<Label> labels)
         {
             return labels.Select(MapToDataDto);
         }

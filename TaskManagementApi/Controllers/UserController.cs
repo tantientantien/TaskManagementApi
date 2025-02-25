@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TaskManagementApi.Dtos;
-using TaskManagementApi.Dtos.Category;
 using TaskManagementApi.Dtos.User;
+using TaskManagementApi.Mappers;
 using TaskManagementApi.Models;
 using TaskManagementApi.Services;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace TaskManagementApi.Controllers
 {
@@ -20,18 +22,12 @@ namespace TaskManagementApi.Controllers
             _userRepository = userRepository;
         }
 
-        //GET: api/users
+        // GET: api/users
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserDataDto>>> GetAllUsers()
         {
             var users = await _userRepository.GetAll();
-
-            var data = users.Select(c => new UserDataDto
-            {
-                Id = c.Id,
-                Username = c.Username,
-                Email = c.Email,
-            });
+            var data = users.MapToDataDto();
             return Ok(new { status = "success", message = "Get all users successfully", data = data });
         }
 

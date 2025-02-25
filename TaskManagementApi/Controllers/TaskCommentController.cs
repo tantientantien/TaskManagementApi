@@ -7,7 +7,7 @@ using TaskManagementApi.Models;
 
 namespace TaskManagementApi.Controllers
 {
-    [Route("api/task-comments")]
+    [Route("api/comments")]
     [ApiController]
     public class TaskCommentController : ControllerBase
     {

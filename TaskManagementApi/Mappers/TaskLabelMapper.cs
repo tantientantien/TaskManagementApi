@@ -6,7 +6,7 @@ namespace TaskManagementApi.Mappers
 {
     public static class TaskLabelMapper
     {
-        public static TaskLabel MapFromCreateDto(TaskLabelCreateDto dto)
+        public static TaskLabel MapFromCreateDto(this TaskLabelCreateDto dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
             return new TaskLabel

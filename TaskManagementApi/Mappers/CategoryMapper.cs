@@ -26,7 +26,7 @@ namespace TaskManagementApi.Mappers
             existingCategory.Description = dto.Description;
         }
 
-        public static CategoryDataDto MapToDataDto(Category category)
+        public static CategoryDataDto MapToDataDto(this Category category)
         {
             return new CategoryDataDto
             {
@@ -36,7 +36,7 @@ namespace TaskManagementApi.Mappers
             };
         }
 
-        public static IEnumerable<CategoryDataDto> MapToDataDtoList(IEnumerable<Category> categories)
+        public static IEnumerable<CategoryDataDto> MapToDataDtoList(this IEnumerable<Category> categories)
         {
             return categories.Select(MapToDataDto);
         }

@@ -1,23 +1,28 @@
-﻿using TaskManagementApi.Dtos.Task;
-using Task = TaskManagementApi.Models.Task;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using TaskManagementApi.Dtos.User;
+using TaskManagementApi.Models;
 
 namespace TaskManagementApi.Mappers
 {
     public static class UserMapper
     {
-        public static TaskDataDto MapToDataDto(this Task task)
+        public static UserDataDto MapToDataDto(this User user)
         {
-            if (task == null) throw new ArgumentNullException(nameof(task));
-            return new TaskDataDto
+            if (user == null) throw new ArgumentNullException(nameof(user));
+            return new UserDataDto
             {
-                Id = task.Id,
-                Title = task.Title,
-                Description = task.Description,
-                IsCompleted = task.IsCompleted,
-                UserId = task.UserId,
-                CategoryId = task.CategoryId,
-                CreatedAt = task.CreatedAt
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
             };
+        }
+
+        public static IEnumerable<UserDataDto> MapToDataDto(this IEnumerable<User> users)
+        {
+            if (users == null) throw new ArgumentNullException(nameof(users));
+            return users.Select(user => user.MapToDataDto()).ToList();
         }
     }
 }

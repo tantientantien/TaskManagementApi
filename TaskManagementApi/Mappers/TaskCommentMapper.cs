@@ -6,7 +6,7 @@ namespace TaskManagementApi.Mappers
 {
     public static class TaskCommentMapper
     {
-        public static TaskComment MapFromCreateDto(TaskCommentCreateDto dto)
+        public static TaskComment MapFromCreateDto(this TaskCommentCreateDto dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
             return new TaskComment
