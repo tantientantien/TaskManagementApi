@@ -46,7 +46,7 @@ namespace TaskManagementApi.Controllers
         // POST: api/tasks/{categoryId}
         [Authorize]
         [HttpPost]
-        public async Task<ActionResult<TaskDataDto>> CreateTask([FromBody] TaskCreateDto taskDto)
+        public async Task<ActionResult<TaskDataDto>> AddTask([FromBody] TaskCreateDto taskDto)
         {
             if (!ModelState.IsValid)
             {

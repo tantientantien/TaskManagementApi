@@ -62,7 +62,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 
 
-builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<IGenericRepository<Task>, TaskRepository>();
 builder.Services.AddScoped<IGenericRepository<Label>, LabelRepository>();
 builder.Services.AddScoped<IGenericRepository<Category>, CategoryRepository>();
@@ -70,6 +69,7 @@ builder.Services.AddScoped<IGenericRepository<TaskComment>, TaskCommentRepositor
 builder.Services.AddScoped<IGenericRepository<TaskLabel>, TaskLabelRepository>();
 
 
+builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 

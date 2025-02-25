@@ -21,7 +21,7 @@ namespace TaskManagementApi.Controllers
         // POST: api/task-comments/{taskId}
         [Authorize]
         [HttpPost("{taskId}")]
-        public async Task<ActionResult<TaskCommentDataDto>> CreateTaskComment(int taskId, [FromBody] TaskCommentCreateDto createDto)
+        public async Task<ActionResult<TaskCommentDataDto>> AddCommentToATask(int taskId, [FromBody] TaskCommentCreateDto createDto)
         {
             if (!ModelState.IsValid)
             {
@@ -64,7 +64,7 @@ namespace TaskManagementApi.Controllers
         // DELETE: api/task-comments/{id}
         [Authorize]
         [HttpDelete("{id:int}")]
-        public async Task<IActionResult> DeleteTaskComment(int id)
+        public async Task<IActionResult> DeleteComment(int id)
         {
             var comment = await _taskCommentRepository.GetById(id);
             if (comment == null)

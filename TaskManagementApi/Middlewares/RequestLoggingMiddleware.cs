@@ -17,10 +17,8 @@ namespace TaskManagementApi.Middlewares
         {
             var method = context.Request.Method;
             var path = context.Request.Path;
-            var timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
 
             var stopwatch = Stopwatch.StartNew();
-
             try
             {
                 await _next(context);
@@ -31,8 +29,16 @@ namespace TaskManagementApi.Middlewares
                 var statusCode = context.Response.StatusCode;
                 var elapsedTime = stopwatch.ElapsedMilliseconds;
 
-                _logger.LogInformation("[{Timestamp}] {Method} {Path} => {StatusCode} ({ElapsedTime}ms)",
-                    timestamp, method, path, statusCode, elapsedTime);
+                if (elapsedTime > 500)
+                {
+                    _logger.LogWarning("{Method} {Path} took {ElapsedTime}ms => {StatusCode}",
+                        method, path, elapsedTime, statusCode);
+                }
+                else if (statusCode >= 400)
+                {
+                    _logger.LogError("{Method} {Path} => {StatusCode} ({ElapsedTime}ms)",
+                        method, path, statusCode, elapsedTime);
+                }
             }
         }
     }
