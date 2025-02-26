@@ -21,8 +21,8 @@ namespace TaskManagementApi.Controllers
         }
 
         // POST: api/task-labels
-        [Authorize]
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<TaskLabel>> AssignLabelToATask([FromBody] TaskLabelCreateDto createDto)
         {
             if (!ModelState.IsValid)
@@ -30,15 +30,15 @@ namespace TaskManagementApi.Controllers
                 return BadRequest(new { status = "error", message = "Invalid request data", errors = ModelState });
             }
 
-            var taskLabel = TaskLabelMapper.MapFromCreateDto(createDto);
+            var taskLabel = TaskLabelMapper.ToTaskLabel(createDto);
             await _taskLabelRepository.Add(taskLabel);
 
             return Ok(new { status = "success", message = "Task label created", data = taskLabel });
         }
 
         // DELETE: api/task-labels/{taskId}/{labelId}
-        [Authorize]
         [HttpDelete("{taskId:int}/{labelId:int}")]
+        [Authorize]
         public async Task<IActionResult> RemoveLabelFromATask(int taskId, int labelId)
         {
             var taskLabel = await (_taskLabelRepository as TaskLabelRepository).GetById(taskId, labelId);

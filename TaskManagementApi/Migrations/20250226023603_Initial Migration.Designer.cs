@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskManagementApi.Data;
 
@@ -11,9 +12,11 @@ using TaskManagementApi.Data;
 namespace TaskManagementApi.Migrations
 {
     [DbContext(typeof(TaskManagementContext))]
-    partial class TaskManagementContextModelSnapshot : ModelSnapshot
+    [Migration("20250226023603_Initial Migration")]
+    partial class InitialMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -186,7 +189,7 @@ namespace TaskManagementApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("TaskManagementApi.Models.Label", b =>
@@ -203,7 +206,7 @@ namespace TaskManagementApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Labels", (string)null);
+                    b.ToTable("Labels");
                 });
 
             modelBuilder.Entity("TaskManagementApi.Models.Task", b =>
@@ -242,7 +245,7 @@ namespace TaskManagementApi.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Tasks", (string)null);
+                    b.ToTable("Tasks");
                 });
 
             modelBuilder.Entity("TaskManagementApi.Models.TaskComment", b =>
@@ -273,7 +276,7 @@ namespace TaskManagementApi.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TaskComments", (string)null);
+                    b.ToTable("TaskComments");
                 });
 
             modelBuilder.Entity("TaskManagementApi.Models.TaskLabel", b =>
@@ -288,7 +291,7 @@ namespace TaskManagementApi.Migrations
 
                     b.HasIndex("LabelId");
 
-                    b.ToTable("TaskLabels", (string)null);
+                    b.ToTable("TaskLabels");
                 });
 
             modelBuilder.Entity("TaskManagementApi.Models.User", b =>

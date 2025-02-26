@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TaskManagementApi.Dtos.Label;
 using TaskManagementApi.Mappers;
 using TaskManagementApi.Models;
@@ -24,10 +24,10 @@ namespace TaskManagementApi.Controllers
             var labels = await _labelRepository.GetAll();
             if (!labels.Any())
             {
-                return Ok(new { status = "success", message = "No labels found" });
+                return Ok(new { status = "success", message = "No labels found", data = new List<LabelDataDto>() });
             }
 
-            var data = LabelMapper.MapToDataDtoList(labels);
+            var data = labels.Select(l => l.ToDataDto());
             return Ok(new { status = "success", message = "Labels retrieved", data });
         }
 
@@ -41,34 +41,35 @@ namespace TaskManagementApi.Controllers
                 return NotFound(new { status = "error", message = "Label not found" });
             }
 
-            var data = LabelMapper.MapToDataDto(label);
-            return Ok(new { status = "success", message = "Label found", data });
+            return Ok(new { status = "success", message = "Label found", data = label.ToDataDto() });
         }
 
         // POST: api/labels
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<LabelDataDto>> AddLabel([FromBody] LabelCreateDto createDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new { status = "error", message = "Invalid label data", errors = ModelState });
             }
+
             var existingLabels = await _labelRepository.GetAll();
             if (existingLabels.Any(l => l.Name == createDto.Name))
             {
                 return Conflict(new { status = "error", message = "Label name already exists" });
             }
 
-            var label = LabelMapper.MapFromCreateDto(createDto);
+            var label = createDto.ToLabel();
             await _labelRepository.Add(label);
 
-            var labelDto = LabelMapper.MapToDataDto(label);
             return CreatedAtAction(nameof(GetLabelById), new { id = label.Id },
-                new { status = "success", message = "Label created", data = labelDto });
+                new { status = "success", message = "Label created", data = label.ToDataDto() });
         }
 
         // PUT: api/labels/{id}
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> UpdateLabel(int id, [FromBody] LabelUpdateDto updateDto)
         {
             if (!ModelState.IsValid || id != updateDto.Id)
@@ -82,15 +83,15 @@ namespace TaskManagementApi.Controllers
                 return NotFound(new { status = "error", message = "Label not found" });
             }
 
-            LabelMapper.MapFromUpdateDto(updateDto, existingLabel);
+            updateDto.UpdateLabel(existingLabel);
             await _labelRepository.Update(existingLabel);
 
-            var updatedLabelDto = LabelMapper.MapToDataDto(existingLabel);
-            return Ok(new { status = "success", message = "Label updated", data = updatedLabelDto });
+            return Ok(new { status = "success", message = "Label updated", data = existingLabel.ToDataDto() });
         }
 
         // DELETE: api/labels/{id}
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> DeleteLabel(int id)
         {
             var label = await _labelRepository.GetById(id);

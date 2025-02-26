@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskManagementApi.Data;
 using TaskManagementApi.Models;
+using Task = System.Threading.Tasks.Task;
 
 namespace TaskManagementApi.Repository
 {
@@ -13,7 +14,7 @@ namespace TaskManagementApi.Repository
             _context = context;
         }
 
-        public async System.Threading.Tasks.Task Add(TaskLabel entity)
+        public async Task Add(TaskLabel entity)
         {
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
@@ -27,7 +28,7 @@ namespace TaskManagementApi.Repository
             throw new NotSupportedException("TaskLabel uses a composite key. Use GetByIdAsync(int taskId, int labelId) instead.");
         }
 
-        public System.Threading.Tasks.Task Delete(int id)
+        public Task Delete(int id)
         {
             throw new NotSupportedException("TaskLabel uses a composite key. Use DeleteAsync(int taskId, int labelId) instead.");
         }
@@ -40,7 +41,7 @@ namespace TaskManagementApi.Repository
                                  .ToListAsync();
         }
 
-        public async System.Threading.Tasks.Task Update(TaskLabel entity)
+        public async Task Update(TaskLabel entity)
         {
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
@@ -56,7 +57,7 @@ namespace TaskManagementApi.Repository
         }
 
 
-        public async System.Threading.Tasks.Task Delete(int taskId, int labelId)
+        public async Task Delete(int taskId, int labelId)
         {
             var entity = await _context.TaskLabels.FindAsync(taskId, labelId);
             if (entity != null)

@@ -1,44 +1,36 @@
-﻿using TaskManagementApi.Dtos;
-using TaskManagementApi.Dtos.Category;
+﻿using TaskManagementApi.Dtos.Category;
 using TaskManagementApi.Dtos.CategoryDtos;
 using TaskManagementApi.Models;
 
-
-namespace TaskManagementApi.Mappers
+public static class CategoryMapper
 {
-    public static class CategoryMapper
+    public static Category ToCategory(this CategoryCreateDto dto)
     {
-        public static Category MapFromCreateDto(this CategoryCreateDto dto)
+        ArgumentNullException.ThrowIfNull(dto, nameof(dto));
+        return new Category
         {
-            if (dto == null) throw new ArgumentNullException(nameof(dto));
-            return new Category
-            {
-                Name = dto.Name,
-                Description = dto.Description
-            };
-        }
+            Name = dto.Name,
+            Description = dto.Description
+        };
+    }
 
-        public static void MapFromUpdateDto(this CategoryUpdateDto dto, Category existingCategory)
-        {
-            if (dto == null) throw new ArgumentNullException(nameof(dto));
-            if (existingCategory == null) throw new ArgumentNullException(nameof(existingCategory));
-            existingCategory.Name = dto.Name;
-            existingCategory.Description = dto.Description;
-        }
+    public static void UpdateCategory(this CategoryUpdateDto dto, Category existingCategory)
+    {
+        ArgumentNullException.ThrowIfNull(dto, nameof(dto));
+        ArgumentNullException.ThrowIfNull(existingCategory, nameof(existingCategory));
 
-        public static CategoryDataDto MapToDataDto(this Category category)
-        {
-            return new CategoryDataDto
-            {
-                Id = category.Id,
-                Name = category.Name,
-                Description = category.Description
-            };
-        }
+        existingCategory.Name = dto.Name;
+        existingCategory.Description = dto.Description;
+    }
 
-        public static IEnumerable<CategoryDataDto> MapToDataDtoList(this IEnumerable<Category> categories)
+    public static CategoryDataDto ToDataDto(this Category category)
+    {
+        ArgumentNullException.ThrowIfNull(category, nameof(category));
+        return new CategoryDataDto
         {
-            return categories.Select(MapToDataDto);
-        }
+            Id = category.Id,
+            Name = category.Name,
+            Description = category.Description
+        };
     }
 }

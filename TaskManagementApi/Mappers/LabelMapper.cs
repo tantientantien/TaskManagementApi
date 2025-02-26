@@ -6,35 +6,31 @@ namespace TaskManagementApi.Mappers
 {
     public static class LabelMapper
     {
-        public static Label MapFromCreateDto(this LabelCreateDto dto)
+        public static Label ToLabel(this LabelCreateDto dto)
         {
-            if (dto == null) throw new ArgumentNullException(nameof(dto));
+            ArgumentNullException.ThrowIfNull(dto, nameof(dto));
             return new Label
             {
-                Name = dto.Name,
+                Name = dto.Name
             };
         }
 
-        public static void MapFromUpdateDto(this LabelUpdateDto dto, Label existingLabel)
+        public static void UpdateLabel(this LabelUpdateDto dto, Label existingLabel)
         {
-            if (dto == null) throw new ArgumentNullException(nameof(dto));
-            if (existingLabel == null) throw new ArgumentNullException(nameof(existingLabel));
+            ArgumentNullException.ThrowIfNull(dto, nameof(dto));
+            ArgumentNullException.ThrowIfNull(existingLabel, nameof(existingLabel));
 
             existingLabel.Name = dto.Name;
         }
 
-        public static LabelDataDto MapToDataDto(this Label label)
+        public static LabelDataDto ToDataDto(this Label label)
         {
+            ArgumentNullException.ThrowIfNull(label, nameof(label));
             return new LabelDataDto
             {
                 Id = label.Id,
                 Name = label.Name
             };
-        }
-
-        public static IEnumerable<LabelDataDto> MapToDataDtoList(this IEnumerable<Label> labels)
-        {
-            return labels.Select(MapToDataDto);
         }
     }
 }

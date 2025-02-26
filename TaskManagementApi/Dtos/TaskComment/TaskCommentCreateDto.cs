@@ -8,7 +8,7 @@ namespace TaskManagementApi.Dtos.TaskComment
         public int TaskId { get; set; }
 
         [Required(ErrorMessage = "UserId is required.")]
-        public int UserId { get; set; }
+        public string? UserId { get; set; }
 
         [Required(ErrorMessage = "Content is required.")]
         [MaxLength(1000, ErrorMessage = "Content cannot exceed 1000 characters.")]

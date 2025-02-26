@@ -1,12 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using TaskManagementApi.Data;
 using TaskManagementApi.Models;
+using Task = System.Threading.Tasks.Task;
 
 namespace TaskManagementApi.Repository
 {
-    public class UserRepository : IUserRepository
+    public class UserRepository : IGenericRepository<User>
     {
         private readonly TaskManagementContext _context;
 
@@ -15,13 +14,13 @@ namespace TaskManagementApi.Repository
             _context = context;
         }
 
-        public async System.Threading.Tasks.Task Add(User entity)
+        public async Task Add(User entity)
         {
             await _context.Users.AddAsync(entity);
             await _context.SaveChangesAsync();
         }
 
-        public async System.Threading.Tasks.Task Delete(int id)
+        public async Task Delete(int id)
         {
             var user = await _context.Users.FindAsync(id);
             if (user != null)
@@ -30,12 +29,6 @@ namespace TaskManagementApi.Repository
                 await _context.SaveChangesAsync();
             }
         }
-
-        public async Task<User?> FindByEmail(string email)
-        {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
-        }
-
 
         public async Task<IEnumerable<User>> GetAll()
         {
@@ -50,10 +43,10 @@ namespace TaskManagementApi.Repository
             return await _context.Users
                                  .Include(u => u.Tasks)
                                  .Include(u => u.TaskComments)
-                                 .FirstOrDefaultAsync(u => u.Id == id);
+                                 .FirstOrDefaultAsync(u => int.Parse(u.Id) == id);
         }
 
-        public async System.Threading.Tasks.Task Update(User entity)
+        public async Task Update(User entity)
         {
             _context.Users.Update(entity);
             await _context.SaveChangesAsync();

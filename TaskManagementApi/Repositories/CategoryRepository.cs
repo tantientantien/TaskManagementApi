@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskManagementApi.Data;
 using TaskManagementApi.Models;
+using Task = System.Threading.Tasks.Task;
 
 namespace TaskManagementApi.Repository
 {
@@ -13,13 +14,13 @@ namespace TaskManagementApi.Repository
             _context = context;
         }
 
-        public async System.Threading.Tasks.Task Add(Category entity)
+        public async Task Add(Category entity)
         {
             await _context.Categories.AddAsync(entity);
             await _context.SaveChangesAsync();
         }
 
-        public async System.Threading.Tasks.Task Delete(int id)
+        public async Task Delete(int id)
         {
             var category = await _context.Categories.FindAsync(id);
             if (category != null)
@@ -43,7 +44,7 @@ namespace TaskManagementApi.Repository
                                  .FirstOrDefaultAsync(c => c.Id == id);
         }
 
-        public async System.Threading.Tasks.Task Update(Category entity)
+        public async Task Update(Category entity)
         {
             _context.Categories.Update(entity);
             await _context.SaveChangesAsync();

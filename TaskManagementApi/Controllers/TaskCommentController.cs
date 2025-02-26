@@ -18,37 +18,37 @@ namespace TaskManagementApi.Controllers
             _taskCommentRepository = taskCommentRepository;
         }
 
-        // POST: api/task-comments/{taskId}
-        [Authorize]
+        // POST: api/comments/{taskId}
         [HttpPost("{taskId}")]
-        public async Task<ActionResult<TaskCommentDataDto>> AddCommentToATask(int taskId, [FromBody] TaskCommentCreateDto createDto)
+        [Authorize]
+        public async Task<ActionResult<TaskCommentDataDto>> AddCommentToTask(int taskId, [FromBody] TaskCommentCreateDto createDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new { status = "error", message = "Invalid data", errors = ModelState });
             }
 
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim))
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
             {
                 return Unauthorized(new { status = "error", message = "Unauthorized: Missing userId" });
             }
 
-            var comment = TaskCommentMapper.MapFromCreateDto(createDto);
-            comment.UserId = int.Parse(userIdClaim);
+            var comment = createDto.ToTaskComment();
+            comment.UserId = userId;
             comment.TaskId = taskId;
 
             await _taskCommentRepository.Add(comment);
 
-            var responseDto = TaskCommentMapper.MapToDataDto(comment);
+            var responseDto = comment.ToDataDto();
 
-            return CreatedAtAction(nameof(GetTaskCommentById), new { id = comment.Id },
+            return CreatedAtAction(nameof(GetCommentById), new { id = comment.Id },
                 new { status = "success", message = "Comment created", data = responseDto });
         }
 
-        // GET: api/task-comments/{id}
+        // GET: api/comments/{id}
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<TaskCommentDataDto>> GetTaskCommentById(int id)
+        public async Task<ActionResult<TaskCommentDataDto>> GetCommentById(int id)
         {
             var comment = await _taskCommentRepository.GetById(id);
             if (comment == null)
@@ -56,14 +56,12 @@ namespace TaskManagementApi.Controllers
                 return NotFound(new { status = "error", message = "Comment not found" });
             }
 
-            var responseDto = TaskCommentMapper.MapToDataDto(comment);
-
-            return Ok(new { status = "success", message = "Comment found", data = responseDto });
+            return Ok(new { status = "success", message = "Comment found", data = comment.ToDataDto() });
         }
 
-        // DELETE: api/task-comments/{id}
-        [Authorize]
+        // DELETE: api/comments/{id}
         [HttpDelete("{id:int}")]
+        [Authorize]
         public async Task<IActionResult> DeleteComment(int id)
         {
             var comment = await _taskCommentRepository.GetById(id);
@@ -72,14 +70,14 @@ namespace TaskManagementApi.Controllers
                 return NotFound(new { status = "error", message = "Comment not found" });
             }
 
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim) || int.Parse(userIdClaim) != comment.UserId)
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId) || userId != comment.UserId)
             {
                 return Forbid();
             }
 
             await _taskCommentRepository.Delete(id);
-            return NoContent();
+            return Ok(new { status = "success", message = "Comment deleted" });
         }
     }
 }

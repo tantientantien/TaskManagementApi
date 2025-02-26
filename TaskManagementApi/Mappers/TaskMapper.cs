@@ -1,15 +1,16 @@
-﻿using System;
-using TaskManagementApi.Dtos;
+﻿using TaskManagementApi.Dtos;
 using TaskManagementApi.Dtos.Task;
+using TaskManagementApi.Models;
 using Task = TaskManagementApi.Models.Task;
 
 namespace TaskManagementApi.Mappers
 {
     public static class TaskMapper
     {
-        public static Task MapFromCreateDto(this TaskCreateDto dto)
+        public static Task ToTask(this TaskCreateDto dto)
         {
-            if (dto == null) throw new ArgumentNullException(nameof(dto));
+            ArgumentNullException.ThrowIfNull(nameof(dto));
+
             return new Task
             {
                 Title = dto.Title,
@@ -21,10 +22,11 @@ namespace TaskManagementApi.Mappers
             };
         }
 
-        public static void MapFromUpdateDto(this TaskUpdateDto dto, Task existingTask)
+        public static void UpdateTask(this TaskUpdateDto dto, Task existingTask)
         {
-            if (dto == null) throw new ArgumentNullException(nameof(dto));
-            if (existingTask == null) throw new ArgumentNullException(nameof(existingTask));
+            ArgumentNullException.ThrowIfNull(nameof(dto));
+            ArgumentNullException.ThrowIfNull(nameof(existingTask));
+
             existingTask.Title = dto.Title;
             existingTask.Description = dto.Description;
             existingTask.IsCompleted = dto.IsCompleted;
@@ -32,9 +34,10 @@ namespace TaskManagementApi.Mappers
             existingTask.CategoryId = dto.CategoryId;
         }
 
-        public static TaskDataDto MapToDataDto(this Task task)
+        public static TaskDataDto ToDataDto(this Task task)
         {
-            if (task == null) throw new ArgumentNullException(nameof(task));
+            ArgumentNullException.ThrowIfNull(nameof(task));
+
             return new TaskDataDto
             {
                 Id = task.Id,

@@ -28,13 +28,13 @@ namespace TaskManagementApi.Controllers
                 return NoContent();
             }
 
-            var data = CategoryMapper.MapToDataDtoList(categories);
+            var data = categories.Select(c => c.ToDataDto());
             return Ok(new { status = "success", message = "Get all categories successfully", data });
         }
 
         // POST: api/categories
         [HttpPost]
-        [Authorize] //[Authorize(Roles = "Admin")]
+        [Authorize] // [Authorize(Roles = "Admin")]
         public async Task<ActionResult<CategoryDataDto>> AddCategory([FromBody] CategoryCreateDto createDto)
         {
             if (!ModelState.IsValid)
@@ -48,10 +48,10 @@ namespace TaskManagementApi.Controllers
                 return Conflict(new { status = "error", message = "Category name already exists" });
             }
 
-            var category = CategoryMapper.MapFromCreateDto(createDto);
+            var category = createDto.ToCategory();
             await _categoryRepository.Add(category);
 
-            var categoryDto = CategoryMapper.MapToDataDto(category);
+            var categoryDto = category.ToDataDto();
             return CreatedAtAction(nameof(GetAllCategories), new { id = categoryDto.Id },
                 new { status = "success", message = "Category created", data = categoryDto });
         }

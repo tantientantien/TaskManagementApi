@@ -4,6 +4,7 @@ using System.Security.Claims;
 using TaskManagementApi.Dtos;
 using TaskManagementApi.Dtos.Task;
 using TaskManagementApi.Mappers;
+using TaskManagementApi.Models;
 using Task = TaskManagementApi.Models.Task;
 
 namespace TaskManagementApi.Controllers
@@ -24,7 +25,7 @@ namespace TaskManagementApi.Controllers
         public async Task<ActionResult<IEnumerable<TaskDataDto>>> GetAllTasks()
         {
             var tasks = await _taskRepository.GetAll();
-            var taskDtos = tasks.Select(TaskMapper.MapToDataDto);
+            var taskDtos = tasks.Select(task => task.ToDataDto());
 
             return Ok(new { status = "success", message = "Tasks retrieved", data = taskDtos });
         }
@@ -39,13 +40,12 @@ namespace TaskManagementApi.Controllers
                 return NotFound(new { status = "error", message = "Task not found" });
             }
 
-            var taskDto = TaskMapper.MapToDataDto(task);
-            return Ok(new { status = "success", message = "Task found", data = taskDto });
+            return Ok(new { status = "success", message = "Task found", data = task.ToDataDto() });
         }
 
-        // POST: api/tasks/{categoryId}
-        [Authorize]
+        // POST: api/tasks
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<TaskDataDto>> AddTask([FromBody] TaskCreateDto taskDto)
         {
             if (!ModelState.IsValid)
@@ -59,19 +59,18 @@ namespace TaskManagementApi.Controllers
                 return Unauthorized(new { status = "error", message = "Unauthorized: Missing userId" });
             }
 
-            var task = TaskMapper.MapFromCreateDto(taskDto);
-            task.UserId = int.Parse(userIdClaim);
+            var task = taskDto.ToTask();
+            task.UserId = userIdClaim;
 
             await _taskRepository.Add(task);
-            var taskDtoResponse = TaskMapper.MapToDataDto(task);
 
             return CreatedAtAction(nameof(GetTaskById), new { id = task.Id },
-                new { status = "success", message = "Task created", data = taskDtoResponse });
+                new { status = "success", message = "Task created", data = task.ToDataDto() });
         }
 
         // PUT: api/tasks/{id}
-        [Authorize]
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> UpdateTask(int id, [FromBody] TaskUpdateDto taskDto)
         {
             if (!ModelState.IsValid)
@@ -86,20 +85,20 @@ namespace TaskManagementApi.Controllers
             }
 
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim) || int.Parse(userIdClaim) != existingTask.UserId)
+            if (string.IsNullOrEmpty(userIdClaim) || userIdClaim != existingTask.UserId)
             {
                 return Forbid();
             }
 
-            TaskMapper.MapFromUpdateDto(taskDto, existingTask);
+            taskDto.UpdateTask(existingTask);
             await _taskRepository.Update(existingTask);
 
             return Ok(new { status = "success", message = "Task updated" });
         }
 
         // DELETE: api/tasks/{id}
-        [Authorize]
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> DeleteTask(int id)
         {
             var task = await _taskRepository.GetById(id);
@@ -109,7 +108,7 @@ namespace TaskManagementApi.Controllers
             }
 
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim) || int.Parse(userIdClaim) != task.UserId)
+            if (string.IsNullOrEmpty(userIdClaim) || userIdClaim != task.UserId)
             {
                 return Forbid();
             }

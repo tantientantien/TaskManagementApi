@@ -6,9 +6,9 @@ namespace TaskManagementApi.Mappers
 {
     public static class TaskCommentMapper
     {
-        public static TaskComment MapFromCreateDto(this TaskCommentCreateDto dto)
+        public static TaskComment ToTaskComment(this TaskCommentCreateDto dto)
         {
-            if (dto == null) throw new ArgumentNullException(nameof(dto));
+            ArgumentNullException.ThrowIfNull(dto, nameof(dto));
             return new TaskComment
             {
                 TaskId = dto.TaskId,
@@ -18,16 +18,17 @@ namespace TaskManagementApi.Mappers
             };
         }
 
-        public static void MapFromUpdateDto(TaskCommentUpdateDto dto, TaskComment existingComment)
+        public static void UpdateTaskComment(this TaskCommentUpdateDto dto, TaskComment existingComment)
         {
-            if (dto == null) throw new ArgumentNullException(nameof(dto));
-            if (existingComment == null) throw new ArgumentNullException(nameof(existingComment));
+            ArgumentNullException.ThrowIfNull(dto, nameof(dto));
+            ArgumentNullException.ThrowIfNull(existingComment, nameof(existingComment));
 
             existingComment.Content = dto.Content;
         }
 
-        public static TaskCommentDataDto MapToDataDto(TaskComment comment)
+        public static TaskCommentDataDto ToDataDto(this TaskComment comment)
         {
+            ArgumentNullException.ThrowIfNull(comment, nameof(comment));
             return new TaskCommentDataDto
             {
                 TaskId = comment.TaskId,

@@ -13,7 +13,7 @@ namespace TaskManagementApi.Models
         [ForeignKey("TaskId")]
         public Task Task { get; set; } = null!;
         [Required]
-        public int UserId { get; set; }
+        public string? UserId { get; set; }
         [ForeignKey("UserId")]
         public User User { get; set; } = null!;
         public string Content { get; set; } = null!;
