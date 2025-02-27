@@ -1,11 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskManagementApi.Data;
+using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
 using Task = System.Threading.Tasks.Task;
 
 namespace TaskManagementApi.Repository
 {
-    public class TaskLabelRepository : IGenericRepository<TaskLabel>
+    public class TaskLabelRepository : ITaskLabelRepository
     {
         private readonly TaskManagementContext _context;
 
@@ -51,13 +52,13 @@ namespace TaskManagementApi.Repository
         }
 
 
-        public async Task<TaskLabel> GetById(int taskId, int labelId)
+        public async Task<TaskLabel> GetTaskLabelById(int taskId, int labelId)
         {
             return await _context.TaskLabels.FindAsync(taskId, labelId);
         }
 
 
-        public async Task Delete(int taskId, int labelId)
+        public async Task DeleteTaskLabel(int taskId, int labelId)
         {
             var entity = await _context.TaskLabels.FindAsync(taskId, labelId);
             if (entity != null)

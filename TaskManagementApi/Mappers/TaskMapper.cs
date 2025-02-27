@@ -16,7 +16,6 @@ namespace TaskManagementApi.Mappers
                 Title = dto.Title,
                 Description = dto.Description,
                 IsCompleted = dto.IsCompleted,
-                UserId = dto.UserId,
                 CategoryId = dto.CategoryId,
                 CreatedAt = DateTime.UtcNow
             };

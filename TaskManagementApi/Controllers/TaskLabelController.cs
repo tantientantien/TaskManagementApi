@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
+using Swashbuckle.AspNetCore.Annotations;
 using System.Threading.Tasks;
 using TaskManagementApi.Dtos.TaskLabel;
+using TaskManagementApi.Interfaces;
 using TaskManagementApi.Mappers;
 using TaskManagementApi.Models;
-using TaskManagementApi.Repository;
 
 namespace TaskManagementApi.Controllers
 {
@@ -13,9 +13,9 @@ namespace TaskManagementApi.Controllers
     [ApiController]
     public class TaskLabelController : ControllerBase
     {
-        private readonly IGenericRepository<TaskLabel> _taskLabelRepository;
+        private readonly ITaskLabelRepository _taskLabelRepository;
 
-        public TaskLabelController(IGenericRepository<TaskLabel> taskLabelRepository)
+        public TaskLabelController(ITaskLabelRepository taskLabelRepository)
         {
             _taskLabelRepository = taskLabelRepository;
         }
@@ -23,7 +23,8 @@ namespace TaskManagementApi.Controllers
         // POST: api/task-labels
         [HttpPost]
         [Authorize]
-        public async Task<ActionResult<TaskLabel>> AssignLabelToATask([FromBody] TaskLabelCreateDto createDto)
+        [SwaggerOperation(Summary = "Assign a label to a task", Description = "Requires authentication. Assigns a label to a specific task")]
+        public async Task<ActionResult<TaskLabel>> AssignLabelToTask([FromBody] TaskLabelCreateDto createDto)
         {
             if (!ModelState.IsValid)
             {
@@ -33,22 +34,23 @@ namespace TaskManagementApi.Controllers
             var taskLabel = TaskLabelMapper.ToTaskLabel(createDto);
             await _taskLabelRepository.Add(taskLabel);
 
-            return Ok(new { status = "success", message = "Task label created", data = taskLabel });
+            return Ok(new { status = "success", message = "Task label assigned", data = taskLabel });
         }
 
         // DELETE: api/task-labels/{taskId}/{labelId}
         [HttpDelete("{taskId:int}/{labelId:int}")]
         [Authorize]
-        public async Task<IActionResult> RemoveLabelFromATask(int taskId, int labelId)
+        [SwaggerOperation(Summary = "Remove a label from a task", Description = "Requires authentication. Removes a label from a specific task")]
+        public async Task<IActionResult> RemoveLabelFromTask(int taskId, int labelId)
         {
-            var taskLabel = await (_taskLabelRepository as TaskLabelRepository).GetById(taskId, labelId);
+            var taskLabel = await _taskLabelRepository.GetTaskLabelById(taskId, labelId);
             if (taskLabel == null)
             {
                 return NotFound(new { status = "error", message = "Task label not found" });
             }
 
-            await (_taskLabelRepository as TaskLabelRepository).Delete(taskId, labelId);
-            return Ok(new { status = "success", message = "Task label deleted" });
+            await _taskLabelRepository.DeleteTaskLabel(taskId, labelId);
+            return Ok(new { status = "success", message = "Task label removed" });
         }
     }
 }

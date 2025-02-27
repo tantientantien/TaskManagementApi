@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 using TaskManagementApi.Dtos.Category;
 using TaskManagementApi.Dtos.CategoryDtos;
 using TaskManagementApi.Mappers;
@@ -20,6 +21,7 @@ namespace TaskManagementApi.Controllers
 
         // GET: api/categories
         [HttpGet]
+        [SwaggerOperation(Summary = "Get all categories", Description = "Retrieve a list of all available categories. Public access")]
         public async Task<ActionResult<IEnumerable<CategoryDataDto>>> GetAllCategories()
         {
             var categories = await _categoryRepository.GetAll();
@@ -35,6 +37,7 @@ namespace TaskManagementApi.Controllers
         // POST: api/categories
         [HttpPost]
         [Authorize] // [Authorize(Roles = "Admin")]
+        [SwaggerOperation(Summary = "Create a new category", Description = "Add a new category to the system. Requires authentication")]
         public async Task<ActionResult<CategoryDataDto>> AddCategory([FromBody] CategoryCreateDto createDto)
         {
             if (!ModelState.IsValid)
@@ -42,8 +45,8 @@ namespace TaskManagementApi.Controllers
                 return BadRequest(new { status = "error", message = "Invalid category data", errors = ModelState });
             }
 
-            var existingCategories = await _categoryRepository.GetAll();
-            if (existingCategories.Any(c => c.Name == createDto.Name))
+            var storedCategories = await _categoryRepository.GetAll();
+            if (storedCategories.Any(c => c.Name == createDto.Name))
             {
                 return Conflict(new { status = "error", message = "Category name already exists" });
             }

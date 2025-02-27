@@ -2,11 +2,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
+using Swashbuckle.AspNetCore.Annotations;
 using TaskManagementApi.Dtos.User;
 using TaskManagementApi.Models;
 using TaskManagementApi.Services;
 using Microsoft.EntityFrameworkCore;
 using TaskManagementApi.Dtos;
+using TaskManagementApi.Mappers;
 
 namespace TaskManagementApi.Controllers
 {
@@ -17,35 +19,28 @@ namespace TaskManagementApi.Controllers
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly TokenService _tokenService;
-        private readonly ILogger<UserController> _logger;
         private readonly RoleManager<IdentityRole> _roleManager;
 
         public UserController(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
             TokenService tokenService,
-            ILogger<UserController> logger,
             RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _tokenService = tokenService;
-            _logger = logger;
             _roleManager = roleManager;
         }
 
         // GET: api/users
         [HttpGet]
         [Authorize(Roles = "Admin")]
+        [SwaggerOperation(Summary = "Get all users", Description = "Requires Admin role")]
         public async Task<IActionResult> GetAllUsers()
         {
             var users = await _userManager.Users
-                .Select(user => new UserDataDto
-                {
-                    Id = user.Id,
-                    Username = user.UserName!,
-                    Email = user.Email!
-                })
+                .Select(user => UserMapper.ToDataDto(user))
                 .ToListAsync();
 
             return Ok(new
@@ -58,6 +53,7 @@ namespace TaskManagementApi.Controllers
 
         // POST: api/users/register
         [HttpPost("register")]
+        [SwaggerOperation(Summary = "Register a new user", Description = "Creates a new user with an optional role (default is 'User'), or the user role can be set to 'Admin'")]
         public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
         {
             if (!ModelState.IsValid)
@@ -85,6 +81,7 @@ namespace TaskManagementApi.Controllers
             var role = string.IsNullOrWhiteSpace(registerDto.Role) ? "User" : registerDto.Role;
             if (!await _roleManager.RoleExistsAsync(role))
             {
+                await _userManager.DeleteAsync(user);
                 return BadRequest(new { status = "error", message = $"Role '{role}' does not exist." });
             }
 
@@ -100,6 +97,7 @@ namespace TaskManagementApi.Controllers
 
         // POST: api/users/login
         [HttpPost("login")]
+        [SwaggerOperation(Summary = "User login", Description = "Authenticates a user and sets a JWT token in an HTTP-only cookie")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             if (!ModelState.IsValid)
@@ -107,7 +105,13 @@ namespace TaskManagementApi.Controllers
                 return BadRequest(new { status = "error", message = "Invalid login data", errors = ModelState });
             }
 
-            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.Email == loginDto.Email.ToLower());
+            var email = loginDto.Email?.ToLower();
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return BadRequest(new { status = "error", message = "Email is required" });
+            }
+
+            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.Email == email);
             if (user == null)
             {
                 return Unauthorized(new { status = "error", message = "Invalid email or password" });
@@ -140,6 +144,7 @@ namespace TaskManagementApi.Controllers
         // POST: api/users/logout
         [HttpPost("logout")]
         [Authorize]
+        [SwaggerOperation(Summary = "User logout", Description = "Deletes the authentication token from cookies")]
         public IActionResult Logout()
         {
             Response.Cookies.Delete("accessToken", new CookieOptions

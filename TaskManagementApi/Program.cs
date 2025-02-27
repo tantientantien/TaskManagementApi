@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using TaskManagementApi.Services;
 using Microsoft.AspNetCore.Identity;
+using TaskManagementApi.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,7 +26,11 @@ builder.Logging.AddProvider(new SerilogLoggerProvider());
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.EnableAnnotations();
+});
+
 
 builder.Services.AddDbContext<TaskManagementContext>(options =>
     options.UseSqlServer(
@@ -36,7 +41,6 @@ builder.Services.AddDbContext<TaskManagementContext>(options =>
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<TaskManagementContext>()
     .AddDefaultTokenProviders();
-
 
 
 builder.Services.AddAuthentication(options =>
@@ -81,16 +85,12 @@ builder.Services.AddScoped<IGenericRepository<Task>, TaskRepository>();
 builder.Services.AddScoped<IGenericRepository<Label>, LabelRepository>();
 builder.Services.AddScoped<IGenericRepository<Category>, CategoryRepository>();
 builder.Services.AddScoped<IGenericRepository<TaskComment>, TaskCommentRepository>();
-builder.Services.AddScoped<IGenericRepository<TaskLabel>, TaskLabelRepository>();
 
 
+builder.Services.AddScoped<ITaskLabelRepository, TaskLabelRepository>();
 builder.Services.AddScoped<TokenService>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-//builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
-
-
 
 // Configure the HTTP request pipeline
 

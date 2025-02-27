@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 using TaskManagementApi.Dtos.Label;
 using TaskManagementApi.Mappers;
 using TaskManagementApi.Models;
@@ -19,6 +20,8 @@ namespace TaskManagementApi.Controllers
 
         // GET: api/labels
         [HttpGet]
+        [SwaggerOperation(Summary = "Retrieve all labels",
+                          Description = "Returns a list of all available labels. No authentication required")]
         public async Task<ActionResult<IEnumerable<LabelDataDto>>> GetAllLabels()
         {
             var labels = await _labelRepository.GetAll();
@@ -33,6 +36,8 @@ namespace TaskManagementApi.Controllers
 
         // GET: api/labels/{id}
         [HttpGet("{id}")]
+        [SwaggerOperation(Summary = "Retrieve a label by ID",
+                          Description = "Fetches a specific label using its ID. No authentication required")]
         public async Task<ActionResult<LabelDataDto>> GetLabelById(int id)
         {
             var label = await _labelRepository.GetById(id);
@@ -47,6 +52,8 @@ namespace TaskManagementApi.Controllers
         // POST: api/labels
         [HttpPost]
         [Authorize]
+        [SwaggerOperation(Summary = "Create a new label",
+                          Description = "Allows authenticated users to create a new label. Label name must be unique")]
         public async Task<ActionResult<LabelDataDto>> AddLabel([FromBody] LabelCreateDto createDto)
         {
             if (!ModelState.IsValid)
@@ -54,8 +61,8 @@ namespace TaskManagementApi.Controllers
                 return BadRequest(new { status = "error", message = "Invalid label data", errors = ModelState });
             }
 
-            var existingLabels = await _labelRepository.GetAll();
-            if (existingLabels.Any(l => l.Name == createDto.Name))
+            var storedLabels = await _labelRepository.GetAll();
+            if (storedLabels.Any(l => l.Name == createDto.Name))
             {
                 return Conflict(new { status = "error", message = "Label name already exists" });
             }
@@ -70,6 +77,8 @@ namespace TaskManagementApi.Controllers
         // PUT: api/labels/{id}
         [HttpPut("{id}")]
         [Authorize]
+        [SwaggerOperation(Summary = "Update an existing label",
+                          Description = "Allows authenticated users to update an existing label's information")]
         public async Task<IActionResult> UpdateLabel(int id, [FromBody] LabelUpdateDto updateDto)
         {
             if (!ModelState.IsValid || id != updateDto.Id)
@@ -77,21 +86,23 @@ namespace TaskManagementApi.Controllers
                 return BadRequest(new { status = "error", message = "Label ID mismatch or invalid data", errors = ModelState });
             }
 
-            var existingLabel = await _labelRepository.GetById(id);
-            if (existingLabel == null)
+            var storedLabel = await _labelRepository.GetById(id);
+            if (storedLabel == null)
             {
                 return NotFound(new { status = "error", message = "Label not found" });
             }
 
-            updateDto.UpdateLabel(existingLabel);
-            await _labelRepository.Update(existingLabel);
+            updateDto.UpdateLabel(storedLabel);
+            await _labelRepository.Update(storedLabel);
 
-            return Ok(new { status = "success", message = "Label updated", data = existingLabel.ToDataDto() });
+            return Ok(new { status = "success", message = "Label updated", data = storedLabel.ToDataDto() });
         }
 
         // DELETE: api/labels/{id}
         [HttpDelete("{id}")]
         [Authorize]
+        [SwaggerOperation(Summary = "Delete a label",
+                          Description = "Allows authenticated users to delete a label by ID")]
         public async Task<IActionResult> DeleteLabel(int id)
         {
             var label = await _labelRepository.GetById(id);

@@ -11,8 +11,6 @@ namespace TaskManagementApi.Mappers
             ArgumentNullException.ThrowIfNull(dto, nameof(dto));
             return new TaskComment
             {
-                TaskId = dto.TaskId,
-                UserId = dto.UserId,
                 Content = dto.Content,
                 CreatedAt = DateTime.UtcNow
             };
