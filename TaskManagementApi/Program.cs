@@ -1,19 +1,12 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authorization.Infrastructure;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Serilog;
-using Serilog.Extensions.Logging;
-using System.Text;
 using TaskManagementApi.Data;
 using TaskManagementApi.Interfaces;
 using TaskManagementApi.Middlewares;
 using TaskManagementApi.Models;
 using TaskManagementApi.Repositories;
 using TaskManagementApi.Repository;
-using TaskManagementApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,8 +16,7 @@ Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .CreateLogger();
 
-builder.Logging.ClearProviders()
-    .AddSerilog(Log.Logger, dispose: true);
+builder.Logging.ClearProviders().AddSerilog(Log.Logger, dispose: true);
 
 // Add core services
 builder.Services.AddControllers();
@@ -38,8 +30,8 @@ builder.Services.AddDbContext<TaskManagementContext>(options =>
     )
 );
 
-// Configure Identity with custom User and Role types
-builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
+// Use Identity API Endpoints
+builder.Services.AddIdentityApiEndpoints<User>(options =>
 {
     options.Password.RequireDigit = true;
     options.Password.RequiredLength = 8;
@@ -52,58 +44,6 @@ builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
     .AddEntityFrameworkStores<TaskManagementContext>()
     .AddDefaultTokenProviders();
 
-// Configure JWT Authentication
-var jwtSettings = builder.Configuration.GetSection("Jwt");
-var jwtKey = jwtSettings["Key"];
-var jwtIssuer = jwtSettings["Issuer"];
-var jwtAudience = jwtSettings["Audience"];
-
-var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultForbidScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultSignOutScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidIssuer = jwtIssuer,
-        ValidateAudience = true,
-        ValidAudience = jwtAudience,
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = key,
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
-    };
-
-    options.Events = new JwtBearerEvents
-    {
-        OnMessageReceived = context =>
-        {
-            var accessToken = context.Request.Cookies["accessToken"];
-            if (!string.IsNullOrEmpty(accessToken))
-            {
-                context.Token = accessToken;
-            }
-            return System.Threading.Tasks.Task.CompletedTask;
-        },
-        OnAuthenticationFailed = context =>
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            context.Response.ContentType = "application/json";
-            var error = new { status = "error", message = "Authentication failed", details = context.Exception.Message };
-            return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(error));
-        }
-    };
-});
-
 
 // Add CORS with a named policy
 builder.Services.AddCors(options =>
@@ -113,7 +53,6 @@ builder.Services.AddCors(options =>
         policy.AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials()
-              //.WithOrigins("https://localhost:44351))
               .SetIsOriginAllowed(_ => true);
     });
 });
@@ -121,9 +60,6 @@ builder.Services.AddCors(options =>
 // Add other services
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(Program));
-builder.Services.AddScoped<CookieService>();
-builder.Services.AddScoped<TokenService>();
-
 
 
 // Register repositories
@@ -149,6 +85,10 @@ app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Use Identity API Endpoints
+app.MapIdentityApi<User>();
+
 app.MapControllers();
 
 // Ensure logging is properly disposed

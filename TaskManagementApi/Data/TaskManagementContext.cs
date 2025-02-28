@@ -20,7 +20,6 @@ namespace TaskManagementApi.Data
         {
             base.OnModelCreating(modelBuilder);
 
-
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.UserName)
                 .IsUnique();
@@ -35,13 +34,11 @@ namespace TaskManagementApi.Data
                 .HasForeignKey(t => t.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-
             modelBuilder.Entity<Category>()
                 .HasMany(c => c.Tasks)
                 .WithOne(t => t.Category)
                 .HasForeignKey(t => t.CategoryId)
                 .OnDelete(DeleteBehavior.Cascade);
-
 
             modelBuilder.Entity<Task>()
                 .HasMany(t => t.TaskLabels)
@@ -49,13 +46,11 @@ namespace TaskManagementApi.Data
                 .HasForeignKey(tl => tl.TaskId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-
             modelBuilder.Entity<Task>()
                 .HasMany(t => t.TaskComments)
                 .WithOne(tc => tc.Task)
                 .HasForeignKey(tc => tc.TaskId)
                 .OnDelete(DeleteBehavior.Cascade);
-
 
             modelBuilder.Entity<TaskLabel>()
                 .HasKey(tl => new { tl.TaskId, tl.LabelId });
@@ -78,9 +73,6 @@ namespace TaskManagementApi.Data
                 .HasForeignKey(tc => tc.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-
-
-
             // seed roles
             List<IdentityRole<int>> roles = new List<IdentityRole<int>>
             {
@@ -99,9 +91,6 @@ namespace TaskManagementApi.Data
             };
             modelBuilder.Entity<IdentityRole<int>>().HasData(roles);
 
-
-
-
             // seed categories
             List<Category> categories = new List<Category>
             {
@@ -110,7 +99,6 @@ namespace TaskManagementApi.Data
                 new Category { Id = 3, Name = "Design", Description = "Design tasks including UI/UX and graphic design." }
             };
             modelBuilder.Entity<Category>().HasData(categories);
-
 
             // seed labels
             List<Label> labels = new List<Label>
@@ -124,6 +112,8 @@ namespace TaskManagementApi.Data
             };
             modelBuilder.Entity<Label>().HasData(labels);
 
+            
+           
         }
     }
 }
