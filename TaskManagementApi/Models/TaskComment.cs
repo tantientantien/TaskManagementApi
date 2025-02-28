@@ -11,12 +11,12 @@ namespace TaskManagementApi.Models
         [Required]
         public int TaskId { get; set; }
         [ForeignKey("TaskId")]
-        public Task Task { get; set; } = null!;
+        public Task? Task { get; set; }
         [Required]
-        public string? UserId { get; set; }
+        public int? UserId { get; set; }
         [ForeignKey("UserId")]
-        public User User { get; set; } = null!;
-        public string Content { get; set; } = null!;
+        public User? User { get; set; }
+        public string? Content { get; set; }
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }

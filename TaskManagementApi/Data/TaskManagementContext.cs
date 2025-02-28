@@ -6,7 +6,7 @@ using Task = TaskManagementApi.Models.Task;
 
 namespace TaskManagementApi.Data
 {
-    public class TaskManagementContext : IdentityDbContext<User>
+    public class TaskManagementContext : IdentityDbContext<User, IdentityRole<int>, int>
     {
         public TaskManagementContext(DbContextOptions<TaskManagementContext> options) : base(options) { }
 
@@ -78,22 +78,51 @@ namespace TaskManagementApi.Data
                 .HasForeignKey(tc => tc.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            List<IdentityRole> roles = new List<IdentityRole>
+
+
+
+            // seed roles
+            List<IdentityRole<int>> roles = new List<IdentityRole<int>>
             {
-                new IdentityRole
+                new IdentityRole<int>
                 {
-                    Id = "d2b98f57-8afc-4c3a-9101-90b7c9c9bfa2",
+                    Id = 1,
                     Name = "Admin",
                     NormalizedName = "ADMIN"
                 },
-                new IdentityRole
+                new IdentityRole<int>
                 {
-                    Id = "3f44e815-90c7-4c6f-83b9-1b91a6d4db27",
+                    Id = 2,
                     Name = "User",
                     NormalizedName = "USER"
                 },
             };
-            modelBuilder.Entity<IdentityRole>().HasData(roles);
+            modelBuilder.Entity<IdentityRole<int>>().HasData(roles);
+
+
+
+
+            // seed categories
+            List<Category> categories = new List<Category>
+            {
+                new Category { Id = 1, Name = "Development", Description = "Tasks related to software development and coding." },
+                new Category { Id = 2, Name = "Marketing", Description = "Marketing-related tasks such as content creation and campaigns." },
+                new Category { Id = 3, Name = "Design", Description = "Design tasks including UI/UX and graphic design." }
+            };
+            modelBuilder.Entity<Category>().HasData(categories);
+
+
+            // seed labels
+            List<Label> labels = new List<Label>
+            {
+                new Label { Id = 1, Name = "Urgent" },
+                new Label { Id = 2, Name = "Bug" },
+                new Label { Id = 3, Name = "Feature Request" },
+                new Label { Id = 4, Name = "High Priority" },
+                new Label { Id = 5, Name = "Low Priority" },
+                new Label { Id = 6, Name = "Improvement" }
+            };
+            modelBuilder.Entity<Label>().HasData(labels);
 
         }
     }

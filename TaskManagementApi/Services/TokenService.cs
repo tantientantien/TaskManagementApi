@@ -23,7 +23,7 @@ namespace TaskManagementApi.Services
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, Convert.ToString(user.Id)),
                 new Claim(ClaimTypes.Email, user.Email)
             };
 
