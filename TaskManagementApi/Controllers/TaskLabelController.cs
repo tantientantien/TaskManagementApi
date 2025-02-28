@@ -56,7 +56,9 @@ namespace TaskManagementApi.Controllers
             var taskLabel = _mapper.Map<TaskLabel>(createDto);
             await _taskLabelRepository.Add(taskLabel);
 
-            return Ok(new { status = "success", message = "Task label assigned", data = _mapper.Map<TaskLabelDataDto>(taskLabel) });
+            var taskLabelDataDto = _mapper.Map<TaskLabelDataDto>(taskLabel);
+
+            return Ok(new { status = "success", message = "Task label assigned", data = taskLabelDataDto });
         }
 
 

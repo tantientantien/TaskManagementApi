@@ -32,12 +32,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c => c.EnableAnnotations());
 
 // Configure database connection
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnectionString");
-if (string.IsNullOrEmpty(connectionString))
-    throw new InvalidOperationException("Database connection string 'DefaultConnectionString' is not configured.");
-
 builder.Services.AddDbContext<TaskManagementContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnectionString")
+    )
+);
 
 // Configure Identity with custom User and Role types
 builder.Services.AddIdentity<User, IdentityRole<int>>(options =>

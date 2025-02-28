@@ -45,8 +45,10 @@ namespace TaskManagementApi.Controllers
             comment.TaskId = taskId;
             await _taskCommentRepository.Add(comment);
 
+            var commentDto = _mapper.Map<TaskCommentDataDto>(comment);
+
             return CreatedAtAction(nameof(GetCommentById), new { id = comment.Id },
-                new { status = "success", message = "Comment created", data = _mapper.Map<TaskCommentDataDto>(comment) });
+                new { status = "success", message = "Comment created", data = commentDto });
         }
 
         // GET: api/comments/{id}
@@ -55,9 +57,10 @@ namespace TaskManagementApi.Controllers
         public async Task<IActionResult> GetCommentById(int id)
         {
             var comment = await _taskCommentRepository.GetById(id);
+            var commentDto = _mapper.Map<TaskCommentDataDto>(comment);
             return comment == null
                 ? NotFound(new { status = "error", message = "Comment not found" })
-                : Ok(new { status = "success", message = "Comment found", data = _mapper.Map<TaskCommentDataDto>(comment) });
+                : Ok(new { status = "success", message = "Comment found", data = commentDto });
         }
 
         // DELETE: api/comments/{id}

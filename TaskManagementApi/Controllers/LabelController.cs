@@ -39,9 +39,10 @@ namespace TaskManagementApi.Controllers
         public async Task<IActionResult> GetLabelById(int id)
         {
             var label = await _labelRepository.GetById(id);
+            var labelDto = _mapper.Map<LabelDataDto>(label);
             return label == null
                 ? NotFound(new { status = "error", message = "Label not found" })
-                : Ok(new { status = "success", message = "Label found", data = _mapper.Map<LabelDataDto>(label) });
+                : Ok(new { status = "success", message = "Label found", data = labelDto });
         }
 
         // POST: api/labels
@@ -55,8 +56,11 @@ namespace TaskManagementApi.Controllers
 
             var label = _mapper.Map<Label>(createDto);
             await _labelRepository.Add(label);
+
+            var labelDto = _mapper.Map<LabelDataDto>(label);
+
             return CreatedAtAction(nameof(GetLabelById), new { id = label.Id },
-                new { status = "success", message = "Label created", data = _mapper.Map<LabelDataDto>(label) });
+                new { status = "success", message = "Label created", data = labelDto });
         }
 
         // PUT: api/labels/{id}
@@ -74,7 +78,10 @@ namespace TaskManagementApi.Controllers
 
             _mapper.Map(updateDto, storedLabel);
             await _labelRepository.Update(storedLabel);
-            return Ok(new { status = "success", message = "Label updated", data = _mapper.Map<LabelDataDto>(storedLabel) });
+
+            var labelDto = _mapper.Map<LabelDataDto>(storedLabel);
+
+            return Ok(new { status = "success", message = "Label updated", data = labelDto });
         }
 
         // DELETE: api/labels/{id}

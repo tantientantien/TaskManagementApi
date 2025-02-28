@@ -46,8 +46,10 @@ namespace TaskManagementApi.Controllers
             var category = _mapper.Map<Category>(createDto);
             await _categoryRepository.Add(category);
 
+            var categoryDto = _mapper.Map<CategoryDataDto>(category);
+
             return CreatedAtAction(nameof(GetAllCategories), new { id = category.Id },
-                new { status = "success", message = "Category created", data = _mapper.Map<CategoryDataDto>(category) });
+                new { status = "success", message = "Category created", data = categoryDto });
         }
     }
 }
