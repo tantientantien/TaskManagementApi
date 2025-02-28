@@ -4,10 +4,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
-using TaskManagementApi.Dtos;
 using TaskManagementApi.Dtos.User;
 using TaskManagementApi.Models;
-using TaskManagementApi.Services;
 
 namespace TaskManagementApi.Controllers
 {
@@ -16,26 +14,17 @@ namespace TaskManagementApi.Controllers
     public class UserController : ControllerBase
     {
         private readonly UserManager<User> _userManager;
-        private readonly TokenService _tokenService;
         private readonly RoleManager<IdentityRole<int>> _roleManager;
         private readonly IMapper _mapper;
-        private readonly SignInManager<User> _signInManager;
-        private readonly CookieService _cookieService;
 
         public UserController(
             UserManager<User> userManager,
-            SignInManager<User> signInManager,
-            TokenService tokenService,
             RoleManager<IdentityRole<int>> roleManager,
-            IMapper mapper,
-            CookieService cookieService)
+            IMapper mapper)
         {
             _userManager = userManager;
-            _signInManager = signInManager;
-            _tokenService = tokenService;
             _roleManager = roleManager;
             _mapper = mapper;
-            _cookieService = cookieService;
         }
 
         // GET: api/users
@@ -49,68 +38,47 @@ namespace TaskManagementApi.Controllers
             return Ok(new { status = "success", message = "Users retrieved successfully", data = userDtos });
         }
 
-
-
-        // POST: api/users/register
-        [HttpPost("register")]
-        [SwaggerOperation(Summary = "Register a new user", Description = "Creates a new user with an optional role (default is 'User')")]
-        public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
+        // POST: api/users/roles
+        [HttpPost("roles")]
+        [Authorize(Roles = "Admin")]
+        [SwaggerOperation(Summary = "Create a new role", Description = "Requires Admin role")]
+        public async Task<IActionResult> CreateRole([FromBody] string roleName)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(new { status = "error", message = "Invalid registration data", errors = ModelState });
+            if (string.IsNullOrWhiteSpace(roleName))
+                return BadRequest(new { status = "error", message = "Role name is required." });
 
-            var user = new User { UserName = registerDto.Username, Email = registerDto.Email };
-            var result = await _userManager.CreateAsync(user, registerDto.Password);
+            var roleExists = await _roleManager.RoleExistsAsync(roleName);
+            if (roleExists)
+                return BadRequest(new { status = "error", message = "Role already exists." });
+
+            var role = new IdentityRole<int> { Name = roleName, NormalizedName = roleName.ToUpper() };
+            var result = await _roleManager.CreateAsync(role);
 
             if (!result.Succeeded)
-                return BadRequest(new { status = "error", message = "Registration failed", errors = result.Errors.Select(e => e.Description) });
+                return BadRequest(new { status = "error", message = "Failed to create role.", errors = result.Errors });
 
-            var role = string.IsNullOrWhiteSpace(registerDto.Role) ? "User" : registerDto.Role;
-            if (!await _roleManager.RoleExistsAsync(role))
-            {
-                await _userManager.DeleteAsync(user); // rollback
-                return BadRequest(new { status = "error", message = $"Role '{role}' does not exist" });
-            }
-
-            await _userManager.AddToRoleAsync(user, role);
-            var userDto = _mapper.Map<UserDataDto>(user);
-
-            return Ok(new { status = "success", message = "User registered successfully", data = userDto, role });
+            return Ok(new { status = "success", message = "Role created successfully." });
         }
 
-        // POST: api/users/login
-        [HttpPost("login")]
-        [SwaggerOperation(Summary = "User login", Description = "Authenticates a user and sets a JWT token in an HTTP-only cookie")]
-        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+        // POST: api/users/{userId}/roles
+        [HttpPost("{userId}/roles")]
+        [Authorize(Roles = "Admin")]
+        [SwaggerOperation(Summary = "Assign a role to a user", Description = "Requires Admin role")]
+        public async Task<IActionResult> AssignRole(int userId, [FromBody] string roleName)
         {
-            if (!ModelState.IsValid || string.IsNullOrWhiteSpace(loginDto.Email))
-                return BadRequest(new { status = "error", message = "Invalid login data or email required", errors = ModelState });
-
-            var user = await _userManager.FindByEmailAsync(loginDto.Email.ToLower());
+            var user = await _userManager.FindByIdAsync(userId.ToString());
             if (user == null)
-                return Unauthorized(new { status = "error", message = "Invalid email or password" });
+                return NotFound(new { status = "error", message = "User not found." });
 
-            var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
+            var roleExists = await _roleManager.RoleExistsAsync(roleName);
+            if (!roleExists)
+                return BadRequest(new { status = "error", message = "Role does not exist." });
+
+            var result = await _userManager.AddToRoleAsync(user, roleName);
             if (!result.Succeeded)
-                return Unauthorized(new { status = "error", message = "Invalid email or password" });
+                return BadRequest(new { status = "error", message = "Failed to assign role.", errors = result.Errors });
 
-            var token = await _tokenService.CreateToken(user, _userManager);
-            _cookieService.SetCookie("accessToken", token);
-
-            return Ok(new { status = "success", message = "Login successful", data = _mapper.Map<UserDataDto>(user) });
+            return Ok(new { status = "success", message = "Role assigned successfully." });
         }
-
-
-        // POST: api/users/logout
-        [HttpPost("logout")]
-        [SwaggerOperation(Summary = "User logout", Description = "Deletes the authentication token from cookies")]
-        public async Task<IActionResult> Logout()
-        {
-            await _signInManager.SignOutAsync();
-            _cookieService.RemoveCookie("accessToken");
-
-            return Ok(new { status = "success", message = "Logout successful" });
-        }
-
     }
 }
