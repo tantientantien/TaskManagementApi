@@ -1,68 +1,87 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Extensions.Logging;
+using System.Text;
 using TaskManagementApi.Data;
+using TaskManagementApi.Interfaces;
 using TaskManagementApi.Middlewares;
-using Task = TaskManagementApi.Models.Task;
 using TaskManagementApi.Models;
 using TaskManagementApi.Repositories;
 using TaskManagementApi.Repository;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using TaskManagementApi.Services;
-using Microsoft.AspNetCore.Identity;
-using TaskManagementApi.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure logging
+// Configure Serilog for logging
 Log.Logger = new LoggerConfiguration()
-       .WriteTo.File("Logs/app.log")
-       .CreateLogger();
+    .WriteTo.File("Logs/app.log", rollingInterval: RollingInterval.Day)
+    .MinimumLevel.Information()
+    .CreateLogger();
 
-builder.Logging.ClearProviders();
-builder.Logging.AddProvider(new SerilogLoggerProvider());
+builder.Logging.ClearProviders()
+    .AddSerilog(Log.Logger, dispose: true);
 
-// Add services to the container
+// Add core services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.EnableAnnotations();
-});
+builder.Services.AddSwaggerGen(c => c.EnableAnnotations());
 
+// Configure database connection
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnectionString");
+if (string.IsNullOrEmpty(connectionString))
+    throw new InvalidOperationException("Database connection string 'DefaultConnectionString' is not configured.");
 
 builder.Services.AddDbContext<TaskManagementContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnectionString")
-    )
-);
+    options.UseSqlServer(connectionString));
 
-builder.Services.AddIdentity<User, IdentityRole>()
+// Configure Identity with custom User and Role types
+builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
+{
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 8;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
+    options.User.RequireUniqueEmail = true;
+})
+    .AddRoles<IdentityRole<int>>()
     .AddEntityFrameworkStores<TaskManagementContext>()
     .AddDefaultTokenProviders();
 
+// Configure JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var jwtKey = jwtSettings["Key"];
+var jwtIssuer = jwtSettings["Issuer"];
+var jwtAudience = jwtSettings["Audience"];
+
+var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
 
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme =
-    options.DefaultChallengeScheme =
-    options.DefaultForbidScheme =
-    options.DefaultScheme =
-    options.DefaultSignInScheme =
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultForbidScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultSignOutScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(options =>
+})
+.AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidIssuer = jwtIssuer,
         ValidateAudience = true,
-        ValidAudience = builder.Configuration["Jwt:Audience"],
+        ValidAudience = jwtAudience,
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(
-            System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
-        )
+        IssuerSigningKey = key,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
     };
 
     options.Events = new JwtBearerEvents
@@ -75,25 +94,49 @@ builder.Services.AddAuthentication(options =>
                 context.Token = accessToken;
             }
             return System.Threading.Tasks.Task.CompletedTask;
+        },
+        OnAuthenticationFailed = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.ContentType = "application/json";
+            var error = new { status = "error", message = "Authentication failed", details = context.Exception.Message };
+            return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(error));
         }
     };
 });
 
 
+// Add CORS with a named policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials()
+              //.WithOrigins("https://localhost:44351))
+              .SetIsOriginAllowed(_ => true);
+    });
+});
 
-builder.Services.AddScoped<IGenericRepository<Task>, TaskRepository>();
+// Add other services
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddScoped<CookieService>();
+builder.Services.AddScoped<TokenService>();
+
+
+
+// Register repositories
+builder.Services.AddScoped<IGenericRepository<TaskManagementApi.Models.Task>, TaskRepository>();
 builder.Services.AddScoped<IGenericRepository<Label>, LabelRepository>();
 builder.Services.AddScoped<IGenericRepository<Category>, CategoryRepository>();
 builder.Services.AddScoped<IGenericRepository<TaskComment>, TaskCommentRepository>();
-
-
 builder.Services.AddScoped<ITaskLabelRepository, TaskLabelRepository>();
-builder.Services.AddScoped<TokenService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
-
+// Configure middleware pipeline
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
@@ -104,18 +147,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-
-app.UseCors(x => x
-     .AllowAnyMethod()
-     .AllowAnyHeader()
-     .AllowCredentials()
-      //.WithOrigins("https://localhost:44351))
-      .SetIsOriginAllowed(origin => true));
-
-
+app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
+
+// Ensure logging is properly disposed
+app.Lifetime.ApplicationStopped.Register(Log.CloseAndFlush);
+
 app.Run();

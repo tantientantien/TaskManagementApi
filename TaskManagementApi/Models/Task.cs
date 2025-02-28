@@ -1,7 +1,4 @@
-﻿using NuGet.Packaging.Signing;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TaskManagementApi.Models
@@ -13,12 +10,12 @@ namespace TaskManagementApi.Models
         public int Id { get; set; }
         [Required]
         [MaxLength(200)]
-        public string Title { get; set; } = null!;
+        public string? Title { get; set; }
         [MaxLength(1000)]
         public string? Description { get; set; }
         public bool IsCompleted { get; set; } = false;
         [Required]
-        public string? UserId { get; set; }
+        public int? UserId { get; set; }
         [ForeignKey("UserId")]
         public User? User { get; set; }
         [Required]

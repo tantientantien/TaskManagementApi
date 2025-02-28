@@ -43,7 +43,7 @@ namespace TaskManagementApi.Repository
             return await _context.Users
                                  .Include(u => u.Tasks)
                                  .Include(u => u.TaskComments)
-                                 .FirstOrDefaultAsync(u => int.Parse(u.Id) == id);
+                                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 
         public async Task Update(User entity)
