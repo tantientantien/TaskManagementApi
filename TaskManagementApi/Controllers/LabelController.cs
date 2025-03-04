@@ -39,10 +39,9 @@ namespace TaskManagementApi.Controllers
         public async Task<IActionResult> GetLabelById(int id)
         {
             var label = await _labelRepository.GetById(id);
-            var labelDto = _mapper.Map<LabelDataDto>(label);
             return label == null
                 ? NotFound(new { status = "error", message = "Label not found" })
-                : Ok(new { status = "success", message = "Label found", data = labelDto });
+                : Ok(new { status = "success", message = "Label found", data = _mapper.Map<LabelDataDto>(label) });
         }
 
         // POST: api/labels
