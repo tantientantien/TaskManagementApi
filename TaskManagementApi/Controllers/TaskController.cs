@@ -47,10 +47,9 @@ namespace TaskManagementApi.Controllers
         public async Task<IActionResult> GetTaskById(int id)
         {
             var task = await _taskRepository.GetById(id);
-            var taskDto = _mapper.Map<TaskDataDto>(task);
             return task == null
                 ? NotFound(new { status = "error", message = "Task not found" })
-                : Ok(new { status = "success", message = "Task found", data = taskDto });
+                : Ok(new { status = "success", message = "Task found", data = _mapper.Map<TaskDataDto>(task) });
         }
 
         // POST: api/tasks
