@@ -57,10 +57,9 @@ namespace TaskManagementApi.Controllers
         public async Task<IActionResult> GetCommentById(int id)
         {
             var comment = await _taskCommentRepository.GetById(id);
-            var commentDto = _mapper.Map<TaskCommentDataDto>(comment);
             return comment == null
                 ? NotFound(new { status = "error", message = "Comment not found" })
-                : Ok(new { status = "success", message = "Comment found", data = commentDto });
+                : Ok(new { status = "success", message = "Comment found", data = _mapper.Map<TaskCommentDataDto>(comment) });
         }
 
         // DELETE: api/comments/{id}
