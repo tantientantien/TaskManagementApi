@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using TaskManagementApi.Dtos;
+using TaskManagementApi.Dtos.Blob;
 using TaskManagementApi.Dtos.Category;
 using TaskManagementApi.Dtos.CategoryDtos;
 using TaskManagementApi.Dtos.Label;
@@ -14,28 +15,25 @@ public class AutoMapperProfile : Profile
 {
     public AutoMapperProfile()
     {
-        CreateMap<Category, CategoryDataDto>();
+        CreateMap<Category, CategoryDataDto>().ReverseMap();
         CreateMap<CategoryCreateDto, Category>();
 
-
-        CreateMap<Label, LabelDataDto>();
+        CreateMap<Label, LabelDataDto>().ReverseMap();
         CreateMap<LabelCreateDto, Label>();
         CreateMap<LabelUpdateDto, Label>();
 
-
+        CreateMap<TaskComment, TaskCommentDataDto>().ReverseMap();
         CreateMap<TaskCommentCreateDto, TaskComment>();
-        CreateMap<TaskComment, TaskCommentDataDto>();
 
-
-        CreateMap<Task, TaskDataDto>();
+        CreateMap<Task, TaskDataDto>().ReverseMap();
         CreateMap<TaskCreateDto, Task>();
         CreateMap<TaskUpdateDto, Task>();
 
-
+        CreateMap<TaskLabel, TaskLabelDataDto>().ReverseMap();
         CreateMap<TaskLabelCreateDto, TaskLabel>();
-        CreateMap<TaskLabel, TaskLabelDataDto>();
 
+        CreateMap<User, UserDataDto>().ReverseMap();
 
-        CreateMap<User, UserDataDto>();
+        CreateMap<TaskAttachment, TaskAttachmentDto>().ReverseMap();
     }
 }

@@ -15,6 +15,8 @@ namespace TaskManagementApi.Data
         public DbSet<Label> Labels { get; set; }
         public DbSet<TaskLabel> TaskLabels { get; set; }
         public DbSet<TaskComment> TaskComments { get; set; }
+        public DbSet<TaskAttachment> TaskAttachments { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -72,6 +74,13 @@ namespace TaskManagementApi.Data
                 .WithMany(u => u.TaskComments)
                 .HasForeignKey(tc => tc.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<TaskAttachment>()
+                .HasOne(ta => ta.Task)
+                .WithMany(t => t.Attachments)
+                .HasForeignKey(ta => ta.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
 
             // seed roles
             List<IdentityRole<int>> roles = new List<IdentityRole<int>>
