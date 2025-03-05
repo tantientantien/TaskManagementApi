@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using AzureBlobStorage.WebApi.Repository;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using TaskManagementApi.Data;
@@ -53,6 +54,7 @@ builder.Services.AddCors(options =>
         policy.AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials()
+              //.WithOrigins("https://localhost:44351))
               .SetIsOriginAllowed(_ => true);
     });
 });
@@ -60,6 +62,7 @@ builder.Services.AddCors(options =>
 // Add other services
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddScoped<IAzureService, AzureService>();
 
 
 // Register repositories
@@ -68,12 +71,15 @@ builder.Services.AddScoped<IGenericRepository<Label>, LabelRepository>();
 builder.Services.AddScoped<IGenericRepository<Category>, CategoryRepository>();
 builder.Services.AddScoped<IGenericRepository<TaskComment>, TaskCommentRepository>();
 builder.Services.AddScoped<ITaskLabelRepository, TaskLabelRepository>();
+builder.Services.AddScoped<ITaskAttachmentRepository, TaskAttachmentRepository>();
 
 var app = builder.Build();
 
 // Configure middleware pipeline
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<GlobalExceptionMiddleware>();
+
+
 
 if (app.Environment.IsDevelopment())
 {
@@ -82,7 +88,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
 app.UseCors("AllowAll");
+
 app.UseAuthentication();
 app.UseAuthorization();
 

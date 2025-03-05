@@ -26,5 +26,6 @@ namespace TaskManagementApi.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public ICollection<TaskLabel> TaskLabels { get; set; } = new List<TaskLabel>();
         public ICollection<TaskComment> TaskComments { get; set; } = new List<TaskComment>();
+        public ICollection<TaskAttachment> Attachments { get; set; } = new List<TaskAttachment>();
     }
 }
