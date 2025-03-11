@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -16,15 +17,17 @@ namespace TaskManagementApi.Controllers
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole<int>> _roleManager;
         private readonly IMapper _mapper;
-
+        private readonly SignInManager<User> _signInManager;
         public UserController(
             UserManager<User> userManager,
             RoleManager<IdentityRole<int>> roleManager,
-            IMapper mapper)
+            IMapper mapper,
+            SignInManager<User> signInManager)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _mapper = mapper;
+            _signInManager = signInManager;
         }
 
         // GET: api/users
@@ -80,5 +83,26 @@ namespace TaskManagementApi.Controllers
 
             return Ok(new { status = "success", message = "Role assigned successfully." });
         }
+
+        [HttpPost("logout")]
+        [SwaggerOperation(Summary = "User logout", Description = "Deletes the authentication token from cookies")]
+        public async Task<IActionResult> Logout()
+        {
+            await _signInManager.SignOutAsync();
+
+            var cookieOptions = new CookieOptions
+            {
+                Path = "/",
+                Domain = "localhost",
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict
+            };
+            Response.Cookies.Delete(".AspNetCore.Identity.Application", cookieOptions);
+            Response.Cookies.Delete("refreshToken", cookieOptions);
+
+            return Ok(new { status = "success", message = "Logout successful" });
+        }
+
     }
 }
