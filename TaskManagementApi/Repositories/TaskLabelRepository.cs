@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskManagementApi.Data;
+using TaskManagementApi.Dtos.TaskLabel;
 using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
 using Task = System.Threading.Tasks.Task;
@@ -50,6 +51,22 @@ namespace TaskManagementApi.Repository
             _context.TaskLabels.Update(entity);
             await _context.SaveChangesAsync();
         }
+
+
+        public async Task<List<TaskLabelDataDto>> GetTaskLabelById(int taskId)
+        {
+            return await _context.TaskLabels
+                .Where(tl => tl.TaskId == taskId)
+                .Select(tl => new TaskLabelDataDto
+                {
+                    Id = tl.LabelId,
+                    Name = tl.Label.Name,
+                    Color = tl.Label.Color
+                })
+                .ToListAsync();
+        }
+
+
 
 
         public async Task<TaskLabel> GetTaskLabelById(int taskId, int labelId)

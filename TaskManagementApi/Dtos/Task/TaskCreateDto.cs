@@ -13,6 +13,10 @@ namespace TaskManagementApi.Dtos
 
         public bool IsCompleted { get; set; } = false;
 
+        public int AssigneeId { get; set; }
+
+        public DateTime Duedate { get; set; } = DateTime.UtcNow.AddDays(7);
+
         [Required(ErrorMessage = "CategoryId is required.")]
         public int CategoryId { get; set; }
     }

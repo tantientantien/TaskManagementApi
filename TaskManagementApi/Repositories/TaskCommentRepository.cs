@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskManagementApi.Data;
 using TaskManagementApi.Models;
+using TaskManagementApi.Repositories;
 using Task = System.Threading.Tasks.Task;
 
 namespace TaskManagementApi.Repository
@@ -34,7 +35,7 @@ namespace TaskManagementApi.Repository
         {
             return await _context.TaskComments
                 .Include(tc => tc.Task)
-                .Include(tc => tc.User)
+                .Include(tc => tc.User.UserName)
                 .ToListAsync();
         }
 

@@ -71,7 +71,6 @@ public class TaskAttachmentRepository : ITaskAttachmentRepository
         var attachment = await _context.TaskAttachments.FindAsync(id);
         if (attachment == null)
             return false;
-
         await _azureStorage.DeleteAsync(attachment.FileUrl);
         _context.TaskAttachments.Remove(attachment);
         await _context.SaveChangesAsync();

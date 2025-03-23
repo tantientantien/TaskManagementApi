@@ -5,7 +5,8 @@ namespace TaskManagementApi.Dtos.TaskLabel
 {
     public class TaskLabelDataDto
     {
-        public int TaskId { get; set; }
-        public int LabelId { get; set; }
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Color { get; set; } = "#000000";
     }
 }

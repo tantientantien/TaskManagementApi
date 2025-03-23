@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskManagementApi.Data;
 using TaskManagementApi.Models;
+using TaskManagementApi.Repositories;
 using Task = System.Threading.Tasks.Task;
 
 namespace TaskManagementApi.Repository

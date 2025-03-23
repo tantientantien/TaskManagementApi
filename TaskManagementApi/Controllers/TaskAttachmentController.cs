@@ -6,6 +6,7 @@ using Swashbuckle.AspNetCore.Annotations;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TaskManagementApi.Dtos.Blob;
+using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
 using TaskManagementApi.Repositories;
 using Task = TaskManagementApi.Models.Task;
@@ -18,11 +19,11 @@ namespace TaskManagementApi.Controllers
     public class TaskAttachmentController : ControllerBase
     {
         private readonly ITaskAttachmentRepository _taskAttachmentRepository;
-        private readonly IGenericRepository<Task> _taskRepository;
+        private readonly ITaskRepository _taskRepository;
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
 
-        public TaskAttachmentController(ITaskAttachmentRepository taskAttachmentRepository, IGenericRepository<Task> taskRepository, IMapper mapper, UserManager<User> userManager)
+        public TaskAttachmentController(ITaskAttachmentRepository taskAttachmentRepository, ITaskRepository taskRepository, IMapper mapper, UserManager<User> userManager)
         {
             _taskAttachmentRepository = taskAttachmentRepository;
             _taskRepository = taskRepository;
@@ -72,6 +73,8 @@ namespace TaskManagementApi.Controllers
             var attachmentDtos = _mapper.Map<List<TaskAttachmentDto>>(attachments);
             return Ok(new { status = "success", message = "Attachments retrieved", data = attachmentDtos });
         }
+
+
 
         [HttpDelete("{attachmentId}")]
         [SwaggerOperation(Summary = "Delete an attachment", Description = "Deletes a specific attachment by ID")]

@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using TaskManagementApi.Dtos.Category;
 using TaskManagementApi.Dtos.CategoryDtos;
+using TaskManagementApi.Dtos.Task;
 using TaskManagementApi.Models;
+using TaskManagementApi.Repositories;
 
 namespace TaskManagementApi.Controllers
 {
@@ -32,6 +34,18 @@ namespace TaskManagementApi.Controllers
 
             var categoryDtos = _mapper.Map<IEnumerable<CategoryDataDto>>(categories);
             return Ok(new { status = "success", message = "Get all categories successfully", data = categoryDtos });
+        }
+
+        // GET: api/categoris/:id
+        [HttpGet("{id:int}")]
+        [SwaggerOperation(Summary = "Get task by ID", Description = "Retrieves a task using its unique ID")]
+        public async Task<IActionResult> GetCategoryById(int id)
+        {
+            var categories = await _categoryRepository.GetById(id);
+            var categoryDto = _mapper.Map<CategoryDataDto>(categories);
+            return categories == null
+                ? NotFound(new { status = "error", message = "Task not found" })
+                : Ok(new { status = "success", message = "Task found", data = categoryDto });
         }
 
         // POST: api/categories

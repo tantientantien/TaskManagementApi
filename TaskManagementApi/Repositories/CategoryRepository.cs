@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskManagementApi.Data;
 using TaskManagementApi.Models;
+using TaskManagementApi.Repositories;
 using Task = System.Threading.Tasks.Task;
 
 namespace TaskManagementApi.Repository
@@ -37,12 +38,15 @@ namespace TaskManagementApi.Repository
                                  .ToListAsync();
         }
 
+
         public async Task<Category> GetById(int id)
         {
             return await _context.Categories
                                  .Include(c => c.Tasks)
                                  .FirstOrDefaultAsync(c => c.Id == id);
         }
+
+
 
         public async Task Update(Category entity)
         {

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using TaskManagementApi.Dtos.TaskLabel;
 
 namespace TaskManagementApi.Models
 {
@@ -18,12 +19,17 @@ namespace TaskManagementApi.Models
         public int? UserId { get; set; }
         [ForeignKey("UserId")]
         public User? User { get; set; }
+
+        public int? AssigneeId { get; set; }
+        [ForeignKey("AssigneeId")]
+        public User? Assignee { get; set; }
         [Required]
         public int CategoryId { get; set; }
         [ForeignKey("CategoryId")]
         public Category? Category { get; set; }
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime Duedate { get; set; } = DateTime.UtcNow.AddDays(7);
         public ICollection<TaskLabel> TaskLabels { get; set; } = new List<TaskLabel>();
         public ICollection<TaskComment> TaskComments { get; set; } = new List<TaskComment>();
         public ICollection<TaskAttachment> Attachments { get; set; } = new List<TaskAttachment>();

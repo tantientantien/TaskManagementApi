@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
 using TaskManagementApi.Dtos.TaskLabel;
 using TaskManagementApi.Interfaces;
@@ -16,17 +18,31 @@ namespace TaskManagementApi.Controllers
     public class TaskLabelController : ControllerBase
     {
         private readonly ITaskLabelRepository _taskLabelRepository;
-        private readonly IGenericRepository<Task> _taskRepository;
+        private readonly ITaskRepository _taskRepository;
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
 
-        public TaskLabelController(ITaskLabelRepository taskLabelRepository, IMapper mapper, UserManager<User> userManager, IGenericRepository<Task> taskRepository)
+        public TaskLabelController(ITaskLabelRepository taskLabelRepository, IMapper mapper, UserManager<User> userManager, ITaskRepository taskRepository)
         {
             _taskLabelRepository = taskLabelRepository;
             _mapper = mapper;
             _userManager = userManager;
             _taskRepository = taskRepository;
         }
+
+
+        [HttpGet("{taskId:int}")]
+        public async Task<IActionResult> GetLabelsByTaskId(int taskId)
+        {
+            var labels = await _taskLabelRepository.GetTaskLabelById(taskId);
+
+            if (labels == null)
+                return NotFound(new { status = "error", message = "No labels found for this task" });
+
+            return Ok(new { status = "success", data = labels });
+        }
+
+
 
         // POST: api/task-labels
         [HttpPost]
@@ -45,7 +61,7 @@ namespace TaskManagementApi.Controllers
             if (task == null)
                 return NotFound(new { status = "error", message = "Task not found" });
 
-            if (!User.IsInRole("Admin") && userId != task.UserId)
+            if (!User.IsInRole("Admin") && userId != task.UserId && userId != task.AssigneeId)
                 return Forbid();
 
 
@@ -60,6 +76,8 @@ namespace TaskManagementApi.Controllers
 
             return Ok(new { status = "success", message = "Task label assigned", data = taskLabelDataDto });
         }
+
+
 
 
         // DELETE: api/task-labels/{taskId}/{labelId}

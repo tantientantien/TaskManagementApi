@@ -1,4 +1,5 @@
 ﻿using AzureBlobStorage.WebApi.Repository;
+using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -31,6 +32,14 @@ builder.Services.AddDbContext<TaskManagementContext>(options =>
     )
 );
 
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.SameSite = SameSiteMode.None;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.HttpOnly = true;
+});
+
+
 // Use Identity API Endpoints
 builder.Services.AddIdentityApiEndpoints<User>(options =>
 {
@@ -49,15 +58,16 @@ builder.Services.AddIdentityApiEndpoints<User>(options =>
 // Add CORS with a named policy
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyMethod()
-              .AllowAnyHeader()
+        policy.WithOrigins("http://localhost:5173")
               .AllowCredentials()
-              //.WithOrigins("https://localhost:44351))
-              .SetIsOriginAllowed(_ => true);
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
+
+
 
 // Add other services
 builder.Services.AddHttpContextAccessor();
@@ -66,10 +76,12 @@ builder.Services.AddScoped<IAzureService, AzureService>();
 
 
 // Register repositories
-builder.Services.AddScoped<IGenericRepository<TaskManagementApi.Models.Task>, TaskRepository>();
+//builder.Services.AddScoped<IGenericRepository<TaskManagementApi.Models.Task>, TaskRepository>();
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<IGenericRepository<Label>, LabelRepository>();
 builder.Services.AddScoped<IGenericRepository<Category>, CategoryRepository>();
 builder.Services.AddScoped<IGenericRepository<TaskComment>, TaskCommentRepository>();
+//builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<ITaskLabelRepository, TaskLabelRepository>();
 builder.Services.AddScoped<ITaskAttachmentRepository, TaskAttachmentRepository>();
 
@@ -89,13 +101,21 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowAll");
+app.UseCors("AllowFrontend");
+
+
+app.UseCookiePolicy(new CookiePolicyOptions
+{
+    MinimumSameSitePolicy = SameSiteMode.None,
+    Secure = CookieSecurePolicy.Always,
+    HttpOnly = HttpOnlyPolicy.Always
+});
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 // Use Identity API Endpoints
-app.MapIdentityApi<User>();
+app.MapGroup("/api").MapIdentityApi<User>();
 
 app.MapControllers();
 

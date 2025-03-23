@@ -38,6 +38,7 @@ namespace TaskManagementApi.Controllers
         {
             var users = await _userManager.Users.ToListAsync();
             var userDtos = _mapper.Map<IEnumerable<UserDataDto>>(users);
+
             return Ok(new { status = "success", message = "Users retrieved successfully", data = userDtos });
         }
 
@@ -85,6 +86,7 @@ namespace TaskManagementApi.Controllers
         }
 
         [HttpPost("logout")]
+        [Authorize]
         [SwaggerOperation(Summary = "User logout", Description = "Deletes the authentication token from cookies")]
         public async Task<IActionResult> Logout()
         {
@@ -93,15 +95,31 @@ namespace TaskManagementApi.Controllers
             var cookieOptions = new CookieOptions
             {
                 Path = "/",
-                Domain = "localhost",
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict
+                SameSite = SameSiteMode.None
             };
+
             Response.Cookies.Delete(".AspNetCore.Identity.Application", cookieOptions);
-            Response.Cookies.Delete("refreshToken", cookieOptions);
+            //Response.Cookies.Delete("refreshToken", cookieOptions);
 
             return Ok(new { status = "success", message = "Logout successful" });
+        }
+
+
+        [HttpGet("me")]
+        [SwaggerOperation(Summary = "Get current user info", Description = "Requires authentication")]
+        [Authorize]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Unauthorized(new { status = "error", message = "User not found or not authenticated." });
+
+            var userDto = _mapper.Map<UserDataDto>(user);
+            var userRole = await _userManager.GetRolesAsync(user);
+            userDto.Role = userRole;
+            return Ok(new { status = "success", message = "User retrieved successfully", data = userDto });
         }
 
     }
